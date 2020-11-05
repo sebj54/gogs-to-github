@@ -16,6 +16,8 @@ const gogs = {
                 issue.comments = await gogs.listIssueComments(repo, issue)
             }
         }
+
+        return repos
     },
     async listIssueComments({ full_name }, { number }) {
         const { data } = await gogsApi.get(`/repos/${full_name}/issues/${number}/comments`)
