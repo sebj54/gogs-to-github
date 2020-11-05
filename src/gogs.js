@@ -1,96 +1,46 @@
 const gogsApi = require('./gogsApi.js')
 
 const gogs = {
-    listAll() {
-        // TODO: Return a promise
-        gogs.listUserRepositories()
-            .then((repos) => {
-                repos.forEach((repo) => {
-                    Promise.all([
-                        gogs.listRepoLabels(repo)
-                            .then((labels) => {
-                                repo.labels = labels
-                            }),
-                        gogs.listRepoMilestones(repo)
-                            .then((milestones) => {
-                                repo.milestones = milestones
-                            }),
-                        gogs.listRepoWebhooks(repo)
-                            .then((webhooks) => {
-                                repo.webhooks = webhooks
-                            }),
-                    ])
-                        .then(() => {
-                            gogs.listRepoIssues(repo)
-                                .then((issues) => {
-                                    repo.issues = issues
+    async listAll() {
+        const repos = await gogs.listUserRepositories()
 
-                                    issues.forEach((issue) => {
-                                        gogs.listIssueComments(repo, issue)
-                                            .then((comments) => {
-                                                issue.comments = comments
-                                            })
-                                    })
-                                })
-                        })
-                })
-            })
+        for (const repo of repos) {
+            repo.labels = await gogs.listRepoLabels(repo)
+            repo.milestones = await gogs.listRepoMilestones(repo)
+            repo.webhooks = await gogs.listRepoWebhooks(repo)
+
+            const issues = await gogs.listRepoIssues(repo)
+            repo.issues = issues
+
+            for (const issue of issues) {
+                issue.comments = await gogs.listIssueComments(repo, issue)
+            }
+        }
     },
-    listIssueComments({ full_name }, { number }) {
-        return new Promise((resolve, reject) => {
-            gogsApi.get(`/repos/${full_name}/issues/${number}/comments`)
-                .then(({ data }) => {
-                    resolve(data)
-                })
-                .catch(reject)
-        })
+    async listIssueComments({ full_name }, { number }) {
+        const { data } = await gogsApi.get(`/repos/${full_name}/issues/${number}/comments`)
+        return data
     },
-    listRepoIssues({ full_name }) {
-        return new Promise((resolve, reject) => {
-            gogsApi.get(`/repos/${full_name}/issues`)
-                .then(({ data }) => {
-                    resolve(data)
-                })
-                .catch(reject)
-        })
+    async listRepoIssues({ full_name }) {
+        const { data } = await gogsApi.get(`/repos/${full_name}/issues`)
+        return data
     },
-    listRepoLabels({ full_name }) {
-        return new Promise((resolve, reject) => {
-            gogsApi.get(`/repos/${full_name}/labels`)
-                .then(({ data }) => {
-                    resolve(data)
-                })
-                .catch(reject)
-        })
+    async listRepoLabels({ full_name }) {
+        const { data } = await gogsApi.get(`/repos/${full_name}/labels`)
+        return data
     },
-    listRepoMilestones({ full_name }) {
-        return new Promise((resolve, reject) => {
-            gogsApi.get(`/repos/${full_name}/milestones`)
-                .then(({ data }) => {
-                    resolve(data)
-                })
-                .catch(reject)
-        })
+    async listRepoMilestones({ full_name }) {
+        const { data } = await gogsApi.get(`/repos/${full_name}/milestones`)
+        return data
     },
-    listRepoWebhooks({ full_name }) {
-        return new Promise((resolve, reject) => {
-            gogsApi.get(`/repos/${full_name}/hooks`)
-                .then(({ data }) => {
-                    resolve(data)
-                })
-                .catch(reject)
-        })
+    async listRepoWebhooks({ full_name }) {
+        const { data } = await gogsApi.get(`/repos/${full_name}/hooks`)
+        return data
     },
-    listUserRepositories() {
-        return new Promise((resolve, reject) => {
-            gogsApi.get('/user/repos')
-                .then(({ data }) => {
-                    // TODO: Remove this filter
-                    data = data.filter(item => item.name === 'emile-weber')
-                    resolve(data)
-                })
-                .catch(reject)
-        })
+    async listUserRepositories() {
+        const { data } = await gogsApi.get('/user/repos')
+        // TODO: Remove this filter
+        return data.filter(item => item.name === 'emile-weber')
     },
 }
 
