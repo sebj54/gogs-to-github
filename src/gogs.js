@@ -1,20 +1,36 @@
 const gogsApi = require('./gogsApi.js')
+const { log } = require('./logger')
 
 const gogs = {
     async listAll() {
+        log('⌛ Fetching repositories…')
         const repos = await gogs.listUserRepositories()
+        log(`  ✅ ${repos.length} repositories fetched.`)
 
         for (const repo of repos) {
+            log(`⌛ Fetching "${repo.full_name}" repository’s labels…`)
             repo.labels = await gogs.listRepoLabels(repo)
+            log(`  ✅ ${repo.labels.length} labels fetched.`)
+
+            log(`⌛ Fetching "${repo.full_name}" repository’s milestones…`)
             repo.milestones = await gogs.listRepoMilestones(repo)
+            log(`  ✅ ${repo.milestones.length} milestones fetched.`)
+
+            log(`⌛ Fetching "${repo.full_name}" repository’s webhooks…`)
             repo.webhooks = await gogs.listRepoWebhooks(repo)
+            log(`  ✅ ${repo.webhooks.length} webhooks fetched.`)
 
-            const issues = await gogs.listRepoIssues(repo)
-            repo.issues = issues
+            log(`⌛ Fetching "${repo.full_name}" repository’s issues…`)
+            repo.issues = await gogs.listRepoIssuesInOrder(repo)
+            log(`  ✅ ${repo.issues.length} issues fetched.`)
 
-            for (const issue of issues) {
+            let commentsCount = 0
+            log(`⌛ Fetching "${repo.full_name}" issues’ comments…`)
+            for (const issue of repo.issues) {
                 issue.comments = await gogs.listIssueComments(repo, issue)
+                commentsCount += issue.comments.length
             }
+            log(`  ✅ ${commentsCount} comments fetched.`)
         }
 
         return repos

@@ -1,5 +1,5 @@
-const { listRepoLabels } = require('./gogs.js')
 const octokit = require('./octokit.js')
+const { log } = require('./logger')
 
 // TODO: TO GITHUB
 // [x] TODO: Create API wrapper
@@ -14,14 +14,29 @@ const octokit = require('./octokit.js')
 // [ ] TODO: Display code to copy/paste to clone old repos and push them on Github new ones
 const github = {
     async createAll(repos) {
+        log('➡ Starting creation of all repositories…')
         for (const repoToCreate of repos) {
+            log(`⌛ Creating "${repoToCreate.full_name}" repository…`)
             const repo = await github.createRepo(repoToCreate)
+            log(`  ✅ Repository "${repo.full_name}" created.`)
 
+            log(`⌛ Fetching "${repo.full_name}" repository’s default labels…`)
             const defaultLabels = await github.listRepoLabels(repo)
-            await github.deleteRepoLabels(repo, defaultLabels)
+            log(`  ✅ ${defaultLabels.length} default labels fetched.`)
 
+            log(`⌛ Deleting "${repo.full_name}" repository’s default labels…`)
+            await github.deleteRepoLabels(repo, defaultLabels)
+            log(`  ✅ ${defaultLabels.length} default labels deleted.`)
+
+            log(`⌛ Creating "${repo.full_name}" repository’s labels…`)
             const labels = await github.createRepoLabels(repo, repoToCreate.labels)
+            log(`  ✅ ${labels.length} labels created.`)
+
+            log(`⌛ Creating "${repo.full_name}" repository’s milestones…`)
             const milestones = await github.createRepoMilestones(repo, repoToCreate.milestones)
+            log(`  ✅ ${milestones.length} milestones created.`)
+
+            log(`⌛ Creating "${repo.full_name}" repository’s issues…`)
             const issues = await github.createRepoIssues(repo, repoToCreate.issues, labels, milestones)
         }
     },
