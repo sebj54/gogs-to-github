@@ -40,8 +40,39 @@ const gogs = {
         return data
     },
     async listRepoIssues({ full_name }) {
-        const { data } = await gogsApi.get(`/repos/${full_name}/issues`)
+        const resultOpened = await gogsApi.get(`/repos/${full_name}/issues`)
+        const resultClosed = await gogsApi.get(`/repos/${full_name}/issues?state=closed`)
+
+        const data = resultOpened.data
+            .concat(resultClosed.data)
+            .sort((a, b) => a.number - b.number)
+
         return data
+    },
+    async listRepoIssuesInOrder({ full_name }) {
+        const issues = await gogs.listRepoIssues({ full_name })
+        const issuesInOrder = []
+        let i = 0
+        let number = 0
+
+        while (i < issues.length) {
+            number += 1
+            const issue = issues[i]
+
+            if (issue.number === number) {
+                issuesInOrder.push(issue)
+                i += 1
+            } else {
+                issuesInOrder.push({
+                    title: `Missing PR #${number}`,
+                    body: 'This issue has been created to keep issues in the right order after a migration from Gogs.',
+                    number,
+                    state: 'closed',
+                })
+            }
+        }
+
+        return issuesInOrder
     },
     async listRepoLabels({ full_name }) {
         const { data } = await gogsApi.get(`/repos/${full_name}/labels`)

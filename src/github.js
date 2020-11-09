@@ -7,9 +7,8 @@ const { log } = require('./logger')
 // [x] TODO: Create labels for each repo
 // [x] TODO: Create milestones for each repo
 // [x] TODO: Create issues for each repos
-// [ ] TODO: Ensure issues are created with the right numbers (so commits have still the good number)
-// [ ] TODO: Create PRs for each repos
-// [ ] TODO: Create comments for each issue
+// [x] TODO: Ensure issues are created with the right numbers (so commits have still the good number)
+// [x] TODO: Create comments for each issue
 // [ ] TODO: Create webhooks (won't it be a problem when pushing new code? disabled webhooks?)
 // [ ] TODO: Display code to copy/paste to clone old repos and push them on Github new ones
 const github = {
@@ -38,7 +37,49 @@ const github = {
 
             log(`⌛ Creating "${repo.full_name}" repository’s issues…`)
             const issues = await github.createRepoIssues(repo, repoToCreate.issues, labels, milestones)
+            log(`  ✅ ${issues.length} issues created.`)
+
+            let commentsCount = 0
+            log(`⌛ Creating "${repo.full_name}" issues’ comments…`)
+            for (const issue of repoToCreate.issues) {
+                const commentsCreated = await github.createIssueComments(repo, issue)
+                commentsCount += commentsCreated.length
+            }
+            log(`  ✅ ${commentsCount} comments created.`)
         }
+    },
+    async createIssueComments({ full_name }, issue) {
+        const commentsCreated = []
+
+        if (issue.comments) {
+            for (const commentToCreate of issue.comments) {
+                if (commentToCreate.body) {
+                    let body = commentToCreate.body
+                    body += '\n\nOriginally posted on Gogs '
+
+                    if (commentToCreate.user) {
+                        body += `by ${commentToCreate.user.full_name} (${commentToCreate.user.username}), `
+                    }
+
+                    body += `on ${commentToCreate.created_at}`
+
+                    if (commentToCreate.created_at !== commentToCreate.updated_at) {
+                        body += ` (last update on ${commentToCreate.updated_at})`
+                    }
+
+                    body += '.'
+
+                    const payload = {
+                        body,
+                    }
+
+                    const { data } = await octokit.request(`POST /repos/${full_name}/issues/${issue.number}/comments`, payload)
+                    commentsCreated.push(data)
+                }
+            }
+        }
+
+        return commentsCreated
     },
     async createRepo(repo) {
         const payload = {
@@ -56,7 +97,7 @@ const github = {
 
         for (const issueToCreate of issues) {
             let milestone = null
-            let labels = null
+            let labels = []
 
             if (issueToCreate.milestone) {
                 milestone = allMilestones.find(milestone => milestone.title === issueToCreate.milestone.title)
@@ -93,7 +134,7 @@ const github = {
             issuesCreated.push(data)
         }
 
-        return issues
+        return issuesCreated
     },
     async createRepoLabels({ full_name }, labels) {
         const labelsCreated = []
@@ -109,7 +150,7 @@ const github = {
             labelsCreated.push(data)
         }
 
-        return labels
+        return labelsCreated
     },
     async createRepoMilestones({ full_name }, milestones) {
         const milestonesCreated = []
