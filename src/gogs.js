@@ -7,21 +7,25 @@ const gogs = {
         const repos = await gogs.listUserRepositories()
         log(`  ✅ ${repos.length} repositories fetched.`)
 
+        let n = 1
+
         for (const repo of repos) {
-            log(`⌛ Fetching "${repo.full_name}" repository’s labels…`)
+            const count = `[${n}/${repos.length}]`
+
+            log(`⌛ ${count} Fetching "${repo.full_name}" repository’s labels…`)
             repo.labels = await gogs.listRepoLabels(repo)
             log(`  ✅ ${repo.labels.length} labels fetched.`)
 
-            log(`⌛ Fetching "${repo.full_name}" repository’s milestones…`)
+            log(`⌛ ${count} Fetching "${repo.full_name}" repository’s milestones…`)
             repo.milestones = await gogs.listRepoMilestones(repo)
             log(`  ✅ ${repo.milestones.length} milestones fetched.`)
 
-            log(`⌛ Fetching "${repo.full_name}" repository’s webhooks…`)
+            log(`⌛ ${count} Fetching "${repo.full_name}" repository’s webhooks…`)
             repo.webhooks = await gogs.listRepoWebhooks(repo)
             log(`  ✅ ${repo.webhooks.length} webhooks fetched.`)
 
             try {
-                log(`⌛ Fetching "${repo.full_name}" repository’s issues…`)
+                log(`⌛ ${count} Fetching "${repo.full_name}" repository’s issues…`)
                 repo.issues = await gogs.listRepoIssuesInOrder(repo)
                 log(`  ✅ ${repo.issues.length} issues fetched.`)
             } catch (e) {
@@ -35,7 +39,7 @@ const gogs = {
 
             if (repo.issues.length) {
                 let commentsCount = 0
-                log(`⌛ Fetching "${repo.full_name}" issues’ comments…`)
+                log(`⌛ ${count} Fetching "${repo.full_name}" issues’ comments…`)
                 for (const issue of repo.issues) {
                     if (issue.comments) {
                         issue.comments = await gogs.listIssueComments(repo, issue)
@@ -46,6 +50,8 @@ const gogs = {
                 }
                 log(`  ✅ ${commentsCount} comments fetched.`)
             }
+
+            n += 1
         }
 
         return repos

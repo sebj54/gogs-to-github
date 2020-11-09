@@ -7,40 +7,42 @@ const github = {
         const reposCreated = []
 
         for (const repoToCreate of repos) {
-            log(`⌛ Creating "${repoToCreate.full_name}" repository…`)
+            const count = `[${reposCreated.length + 1}/${repos.length}]`
+
+            log(`⌛ ${count} Creating "${repoToCreate.full_name}" repository…`)
             const repo = await github.createRepo(repoToCreate)
             reposCreated.push(repo)
             log(`  ✅ Repository "${repo.full_name}" created.`)
 
-            log(`⌛ Fetching "${repo.full_name}" repository’s default labels…`)
+            log(`⌛ ${count} Fetching "${repo.full_name}" repository’s default labels…`)
             const defaultLabels = await github.listRepoLabels(repo)
             log(`  ✅ ${defaultLabels.length} default labels fetched.`)
 
-            log(`⌛ Deleting "${repo.full_name}" repository’s default labels…`)
+            log(`⌛ ${count} Deleting "${repo.full_name}" repository’s default labels…`)
             await github.deleteRepoLabels(repo, defaultLabels)
             log(`  ✅ ${defaultLabels.length} default labels deleted.`)
 
-            log(`⌛ Creating "${repo.full_name}" repository’s labels…`)
+            log(`⌛ ${count} Creating "${repo.full_name}" repository’s labels…`)
             const labels = await github.createRepoLabels(repo, repoToCreate.labels)
             log(`  ✅ ${labels.length} labels created.`)
 
-            log(`⌛ Creating "${repo.full_name}" repository’s milestones…`)
+            log(`⌛ ${count} Creating "${repo.full_name}" repository’s milestones…`)
             const milestones = await github.createRepoMilestones(repo, repoToCreate.milestones)
             log(`  ✅ ${milestones.length} milestones created.`)
 
-            log(`⌛ Creating "${repo.full_name}" repository’s issues…`)
+            log(`⌛ ${count} Creating "${repo.full_name}" repository’s issues…`)
             const issues = await github.createRepoIssues(repo, repoToCreate.issues, labels, milestones)
             log(`  ✅ ${issues.length} issues created.`)
 
             let commentsCount = 0
-            log(`⌛ Creating "${repo.full_name}" issues’ comments…`)
+            log(`⌛ ${count} Creating "${repo.full_name}" issues’ comments…`)
             for (const issue of repoToCreate.issues) {
                 const commentsCreated = await github.createIssueComments(repo, issue)
                 commentsCount += commentsCreated.length
             }
             log(`  ✅ ${commentsCount} comments created.`)
 
-            log(`⌛ Creating "${repo.full_name}" repository’s webhooks…`)
+            log(`⌛ ${count} Creating "${repo.full_name}" repository’s webhooks…`)
             const webhooks = await github.createRepoWebhooks(repo, repoToCreate.webhooks)
             log(`  ✅ ${webhooks.length} webhooks created.`)
         }
