@@ -9,7 +9,7 @@ const { log } = require('./logger')
 // [x] TODO: Create issues for each repos
 // [x] TODO: Ensure issues are created with the right numbers (so commits have still the good number)
 // [x] TODO: Create comments for each issue
-// [ ] TODO: Create webhooks (won't it be a problem when pushing new code? disabled webhooks?)
+// [x] TODO: Create webhooks (won't it be a problem when pushing new code? disabled webhooks?)
 // [ ] TODO: Display code to copy/paste to clone old repos and push them on Github new ones
 const github = {
     async createAll(repos) {
@@ -46,6 +46,10 @@ const github = {
                 commentsCount += commentsCreated.length
             }
             log(`  ✅ ${commentsCount} comments created.`)
+
+            log(`⌛ Creating "${repo.full_name}" repository’s webhooks…`)
+            const webhooks = await github.createRepoWebhooks(repo, repoToCreate.webhooks)
+            log(`  ✅ ${webhooks.length} webhooks created.`)
         }
     },
     async createIssueComments({ full_name }, issue) {
@@ -171,6 +175,22 @@ const github = {
         }
 
         return milestonesCreated
+    },
+    async createRepoWebhooks({ full_name }, webhooks) {
+        const webhooksCreated = []
+
+        for (const webhookToCreate of webhooks) {
+            const payload = {
+                config: webhookToCreate.config,
+                events: webhookToCreate.events,
+                active: webhookToCreate.active,
+            }
+
+            const { data } = await octokit.request(`POST /repos/${full_name}/hooks`, payload)
+            webhooksCreated.push(data)
+        }
+
+        return webhooksCreated
     },
     async deleteRepoLabels({ full_name }, labels) {
         for (const labelToDelete of labels) {
