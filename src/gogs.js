@@ -7,7 +7,12 @@ const gogs = {
         const repos = await gogs.listUserRepositories()
         log(`  ✅ ${repos.length} repositories fetched.`)
 
+        return repos
+    },
+    async listAllContent(repos) {
         let n = 1
+
+        log('⌛ Fetching repositories’ content…')
 
         for (const repo of repos) {
             const count = `[${n}/${repos.length}]`

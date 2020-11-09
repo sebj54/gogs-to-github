@@ -9,57 +9,75 @@ const github = {
 
         for (const repoToCreate of repos) {
             const count = `[${n}/${repos.length}]`
-            let repo = null
 
             log(`⌛ ${count} Creating "${repoToCreate.full_name}" repository…`)
             try {
-                repo = await github.createRepo(repoToCreate)
+                const repo = await github.createRepo(repoToCreate)
                 reposCreated.push(repo)
                 log(`  ✅ Repository "${repo.full_name}" created.`)
             } catch (e) {
-                log(`  ❌ An error has occurred during creation of "${repoToCreate.full_name}" repository: ${e.message}.`)
-            }
+                log(`  ❌ An error has occurred during creation of "${repoToCreate.full_name}" repository:`)
 
-            if (repo) {
-                try {
-                    log(`⌛ ${count} Fetching "${repo.full_name}" repository’s default labels…`)
-                    const defaultLabels = await github.listRepoLabels(repo)
-                    log(`  ✅ ${defaultLabels.length} default labels fetched.`)
-
-                    log(`⌛ ${count} Deleting "${repo.full_name}" repository’s default labels…`)
-                    await github.deleteRepoLabels(repo, defaultLabels)
-                    log(`  ✅ ${defaultLabels.length} default labels deleted.`)
-
-                    log(`⌛ ${count} Creating "${repo.full_name}" repository’s labels…`)
-                    const labels = await github.createRepoLabels(repo, repoToCreate.labels)
-                    log(`  ✅ ${labels.length} labels created.`)
-
-                    log(`⌛ ${count} Creating "${repo.full_name}" repository’s milestones…`)
-                    const milestones = await github.createRepoMilestones(repo, repoToCreate.milestones)
-                    log(`  ✅ ${milestones.length} milestones created.`)
-
-                    log(`⌛ ${count} Creating "${repo.full_name}" repository’s issues…`)
-                    const issues = await github.createRepoIssues(repo, repoToCreate.issues, labels, milestones)
-                    log(`  ✅ ${issues.length} issues created.`)
-
-                    let commentsCount = 0
-                    log(`⌛ ${count} Creating "${repo.full_name}" issues’ comments…`)
-                    for (const issue of repoToCreate.issues) {
-                        const commentsCreated = await github.createIssueComments(repo, issue)
-                        commentsCount += commentsCreated.length
+                if (e.errors) {
+                    for (const { message } of e.errors) {
+                        log(`  ❌ ${message}`)
                     }
-                    log(`  ✅ ${commentsCount} comments created.`)
-
-                    log(`⌛ ${count} Creating "${repo.full_name}" repository’s webhooks…`)
-                    const webhooks = await github.createRepoWebhooks(repo, repoToCreate.webhooks)
-                    log(`  ✅ ${webhooks.length} webhooks created.`)
-                } catch (e) {
-                    log(`  ❌ An error has occurred during content creation of "${repo.full_name}" repository: ${e.message}.`)
-                    log('  ❌ If you want to restart migration of this repository, you will have to delete it on Github first.')
+                } else {
+                    log(`  ❌ ${e.message}`)
                 }
             }
 
             n += 1
+        }
+
+        return reposCreated
+    },
+    async createAllContent(repos, reposCreated) {
+        log('➡ Starting creation of all repositories’s content…')
+        let index = 0
+
+        for (const repoToCreate of repos) {
+            const count = `[${index + 1}/${repos.length}]`
+            let repo = reposCreated[index]
+
+            try {
+                log(`⌛ ${count} Fetching "${repo.full_name}" repository’s default labels…`)
+                const defaultLabels = await github.listRepoLabels(repo)
+                log(`  ✅ ${defaultLabels.length} default labels fetched.`)
+
+                log(`⌛ ${count} Deleting "${repo.full_name}" repository’s default labels…`)
+                await github.deleteRepoLabels(repo, defaultLabels)
+                log(`  ✅ ${defaultLabels.length} default labels deleted.`)
+
+                log(`⌛ ${count} Creating "${repo.full_name}" repository’s labels…`)
+                const labels = await github.createRepoLabels(repo, repoToCreate.labels)
+                log(`  ✅ ${labels.length} labels created.`)
+
+                log(`⌛ ${count} Creating "${repo.full_name}" repository’s milestones…`)
+                const milestones = await github.createRepoMilestones(repo, repoToCreate.milestones)
+                log(`  ✅ ${milestones.length} milestones created.`)
+
+                log(`⌛ ${count} Creating "${repo.full_name}" repository’s issues…`)
+                const issues = await github.createRepoIssues(repo, repoToCreate.issues, labels, milestones)
+                log(`  ✅ ${issues.length} issues created.`)
+
+                let commentsCount = 0
+                log(`⌛ ${count} Creating "${repo.full_name}" issues’ comments…`)
+                for (const issue of repoToCreate.issues) {
+                    const commentsCreated = await github.createIssueComments(repo, issue)
+                    commentsCount += commentsCreated.length
+                }
+                log(`  ✅ ${commentsCount} comments created.`)
+
+                log(`⌛ ${count} Creating "${repo.full_name}" repository’s webhooks…`)
+                const webhooks = await github.createRepoWebhooks(repo, repoToCreate.webhooks)
+                log(`  ✅ ${webhooks.length} webhooks created.`)
+            } catch (e) {
+                log(`  ❌ An error has occurred during content creation of "${repo.full_name}" repository: ${e.message}.`)
+                log('  ❌ If you want to restart migration of this repository, you will have to delete it on Github first.')
+            }
+
+            index += 1
         }
 
         return reposCreated
