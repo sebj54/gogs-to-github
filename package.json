@@ -1,6 +1,6 @@
 {
   "name": "gogs-to-github",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A tool to help you migrate Gogs repositories to Github",
   "main": "index.js",
   "scripts": {
