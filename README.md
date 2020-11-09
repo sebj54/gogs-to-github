@@ -34,4 +34,4 @@ To be able to run migration, you will need to set 3 environment variables:
 - `GOGS_URL`: Your Gogs instance URL (without trailing slash)
 - `GITHUB_ACCESS_TOKEN`: A GitHub access token with `repo` and `admin:repo_hook` scopes (Create one from https://github.com/settings/tokens)
 
-You can define these variables directly from your CLI or use a `.env` root file. You can copy the structure of the `env.dist` file and fille the variables.
+You can define these variables directly from your CLI or use a `.env` root file. You can copy the structure of the `env.dist` file and fill the variables.
