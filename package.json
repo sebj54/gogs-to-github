@@ -17,9 +17,6 @@
     "url": "https://github.com/sebj54/gogs-to-github/issues"
   },
   "homepage": "https://github.com/sebj54/gogs-to-github#readme",
-  "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
-  },
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js",
