@@ -2,6 +2,24 @@
   "name": "gogs-to-github",
   "version": "1.0.0",
   "description": "A tool to help you migrate Gogs repositories to Github",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sebj54/gogs-to-github.git"
+  },
+  "keywords": [
+    "gogs",
+    "github",
+    "api",
+    "migration",
+    "tool"
+  ],
+  "bugs": {
+    "url": "https://github.com/sebj54/gogs-to-github/issues"
+  },
+  "homepage": "https://github.com/sebj54/gogs-to-github#readme",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
+  },
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js",
