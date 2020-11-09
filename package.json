@@ -4,6 +4,7 @@
   "description": "A tool to help you migrate Gogs repositories to Github",
   "main": "index.js",
   "scripts": {
+    "start": "node ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Sébastien JEAN",
