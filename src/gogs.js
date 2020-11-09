@@ -88,8 +88,7 @@ const gogs = {
     },
     async listUserRepositories() {
         const { data } = await gogsApi.get('/user/repos')
-        // TODO: Remove this filter
-        return data.filter(item => item.name === 'emile-weber')
+        return data
     },
 }
 
