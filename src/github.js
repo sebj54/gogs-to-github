@@ -1,22 +1,15 @@
 const octokit = require('./octokit.js')
 const { log } = require('./logger')
 
-// TODO: TO GITHUB
-// [x] TODO: Create API wrapper
-// [x] TODO: Create repos
-// [x] TODO: Create labels for each repo
-// [x] TODO: Create milestones for each repo
-// [x] TODO: Create issues for each repos
-// [x] TODO: Ensure issues are created with the right numbers (so commits have still the good number)
-// [x] TODO: Create comments for each issue
-// [x] TODO: Create webhooks (won't it be a problem when pushing new code? disabled webhooks?)
-// [ ] TODO: Display code to copy/paste to clone old repos and push them on Github new ones
 const github = {
     async createAll(repos) {
         log('➡ Starting creation of all repositories…')
+        const reposCreated = []
+
         for (const repoToCreate of repos) {
             log(`⌛ Creating "${repoToCreate.full_name}" repository…`)
             const repo = await github.createRepo(repoToCreate)
+            reposCreated.push(repo)
             log(`  ✅ Repository "${repo.full_name}" created.`)
 
             log(`⌛ Fetching "${repo.full_name}" repository’s default labels…`)
@@ -51,6 +44,8 @@ const github = {
             const webhooks = await github.createRepoWebhooks(repo, repoToCreate.webhooks)
             log(`  ✅ ${webhooks.length} webhooks created.`)
         }
+
+        return reposCreated
     },
     async createIssueComments({ full_name }, issue) {
         const commentsCreated = []
