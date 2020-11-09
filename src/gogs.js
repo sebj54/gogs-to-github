@@ -20,17 +20,28 @@ const gogs = {
             repo.webhooks = await gogs.listRepoWebhooks(repo)
             log(`  ✅ ${repo.webhooks.length} webhooks fetched.`)
 
-            log(`⌛ Fetching "${repo.full_name}" repository’s issues…`)
-            repo.issues = await gogs.listRepoIssuesInOrder(repo)
-            log(`  ✅ ${repo.issues.length} issues fetched.`)
-
-            let commentsCount = 0
-            log(`⌛ Fetching "${repo.full_name}" issues’ comments…`)
-            for (const issue of repo.issues) {
-                issue.comments = await gogs.listIssueComments(repo, issue)
-                commentsCount += issue.comments.length
+            try {
+                log(`⌛ Fetching "${repo.full_name}" repository’s issues…`)
+                repo.issues = await gogs.listRepoIssuesInOrder(repo)
+                log(`  ✅ ${repo.issues.length} issues fetched.`)
+            } catch (e) {
+                if (e && e.response && e.response.status === 404) {
+                    repo.issues = []
+                    log('  ❌ No issue to fetch.')
+                } else {
+                    throw e
+                }
             }
-            log(`  ✅ ${commentsCount} comments fetched.`)
+
+            if (repo.issues.length) {
+                let commentsCount = 0
+                log(`⌛ Fetching "${repo.full_name}" issues’ comments…`)
+                for (const issue of repo.issues) {
+                    issue.comments = await gogs.listIssueComments(repo, issue)
+                    commentsCount += issue.comments.length
+                }
+                log(`  ✅ ${commentsCount} comments fetched.`)
+            }
         }
 
         return repos
