@@ -20,6 +20,7 @@ A tool to help you migrate Gogs repositories to Github.
 ```
 git clone https://github.com/sebj54/gogs-to-github
 cd gogs-to-github
+npm ci
 GOGS_ACCESS_TOKEN=____YOUR_GOGS_TOKEN____
 GOGS_URL=https://____YOUR_GOGS_URL____
 GITHUB_ACCESS_TOKEN=____YOUR_GITHUB_TOKEN____
