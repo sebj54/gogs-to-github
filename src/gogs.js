@@ -46,12 +46,8 @@ const gogs = {
                 let commentsCount = 0
                 log(`⌛ ${count} Fetching "${repo.full_name}" issues’ comments…`)
                 for (const issue of repo.issues) {
-                    if (issue.comments) {
-                        issue.comments = await gogs.listIssueComments(repo, issue)
-                        commentsCount += issue.comments.length
-                    } else {
-                        issue.comments = []
-                    }
+                    issue.comments = await gogs.listIssueComments(repo, issue)
+                    commentsCount += issue.comments.length
                 }
                 log(`  ✅ ${commentsCount} comments fetched.`)
             }
