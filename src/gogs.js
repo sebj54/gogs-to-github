@@ -31,7 +31,7 @@ const gogs = {
 
             try {
                 log(`⌛ ${count} Fetching "${repo.full_name}" repository’s issues…`)
-                repo.issues = await gogs.listRepoIssuesInOrder(repo)
+                repo.issues = await gogs.listAllRepoIssuesInOrder(repo)
                 log(`  ✅ ${repo.issues.length} issues fetched.`)
             } catch (e) {
                 if (e && e.response && e.response.status === 404) {
@@ -65,18 +65,42 @@ const gogs = {
         const { data } = await gogsApi.get(`/repos/${full_name}/issues/${number}/comments`)
         return data
     },
-    async listRepoIssues({ full_name }) {
-        const resultOpened = await gogsApi.get(`/repos/${full_name}/issues`)
-        const resultClosed = await gogsApi.get(`/repos/${full_name}/issues?state=closed`)
+    async listAllRepoIssues(repo) {
+        const issuesOpened = await gogs.listRepoIssues(repo)
+        const issuesClosed = await gogs.listRepoIssues(repo, 'closed')
 
-        const data = resultOpened.data
-            .concat(resultClosed.data)
+        const data = issuesOpened.concat(issuesClosed)
             .sort((a, b) => a.number - b.number)
 
         return data
     },
-    async listRepoIssuesInOrder({ full_name }) {
-        const issues = await gogs.listRepoIssues({ full_name })
+    async listRepoIssues({ full_name }, state) {
+        let issues = []
+        let page = 1
+        let hasNextPage = true
+        const stateParameter = state ? `&state=${state}` : ''
+
+        while (hasNextPage) {
+            const { data, headers } = await gogsApi.get(`/repos/${full_name}/issues?page=${page}${stateParameter}`)
+
+            issues = issues.concat(data)
+
+            if (headers.link) {
+                const matches = headers.link.match(/<[^>]*\?page=(\d+)>; rel="next"/)
+                if (matches) {
+                    page = Number(matches[1])
+                } else {
+                    hasNextPage = false
+                }
+            } else {
+                hasNextPage = false
+            }
+        }
+
+        return issues
+    },
+    async listAllRepoIssuesInOrder(repo) {
+        const issues = await gogs.listAllRepoIssues(repo)
         const issuesInOrder = []
         let i = 0
         let number = 0
